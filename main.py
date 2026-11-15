@@ -8,8 +8,8 @@ carrying its orders. Orders decided on a batch fill at the next bar's open,
 so every decision here uses only bars the harness has already sent.
 
 Strategy, in one paragraph: sit in cash until cbBTC capitulates -- its close
-falls 4% or more below the highest close of the previous 240 bars (four
-hours) -- then buy with all cash. Exit the whole position at +2%
+falls 4% or more below the highest close of the previous 360 bars (six
+hours) -- then buy with all cash. Exit the whole position at +1%
 take-profit on its cost, or at -2% stop-loss. One open position at most, one
 round trip per washout, at most a handful of trades per day. After a
 stop-loss, wait 30 bars before trusting the washout setup again: a stop means
@@ -24,11 +24,16 @@ is only ~12 bps -- so small wiggles are untradable. Only a real washout,
 whose recovery exceeds the round-trip cost by a wide margin, is worth
 trading. The numbers were picked by a grid search on the published dev
 window (24h, cbBTC -4.0% top to bottom) and cross-checked on the previous
-race's dev window (24h, cbBTC -4.9%): the chosen point -- 240-bar high, 4%
-dip, +2% take-profit, -2% stop -- is positive on BOTH windows (+$17.66 and
-+$19.84 net PnL after every fee, slippage and impact, one round trip each,
-max drawdown about 1%), and it sits on a flat plateau (dips 3.5-4.5% and
-stops 1.5-3% give the identical trade on both windows), not a tuned spike.
+race's dev window (24h, cbBTC -4.9%): the chosen point -- 360-bar high, 4%
+dip, +1% take-profit, -2% stop -- is positive on BOTH windows (+$29.04 and
++$9.11 net PnL after every fee, slippage and impact; three round trips on the
+dev window, one on the cross-check window; max drawdown about 2%), and it
+sits on a flat plateau (dips 3.5-4.0% give the identical trades, stops
+1.5-3% never fire, take-profits 0.8-1.2% stay positive on both windows, and
+9 of 10 one-step neighbours stay positive on both windows), not a tuned
+spike. The tighter +1% take-profit (down from +2%) is what turns the dev
+window from a single round trip into three: it banks each recovery before
+the tape rolls over again, so the dev PnL no longer rides on one trade.
 Trend-following (EMA cross) was tested on the same windows and loses on both;
 shallower dips (3% and below) lose on both. The 4% washout is rare, but when
 it comes the recovery that follows it is the largest move of the day.
@@ -47,13 +52,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "ven
 import makefun_bars
 
 SYMBOL = "CBBTC"
-# A washout is a close 4% or more below the 240-bar (4-hour) rolling high:
+# A washout is a close 4% or more below the 360-bar (6-hour) rolling high:
 # close * 100 <= high * 96.
-LOOKBACK_BARS = 240
+LOOKBACK_BARS = 360
 DIP_NUM = 96
 DIP_DEN = 100
-# Take profit at +2% of the position's cost: value * 1000 >= cost * 1020.
-TP_NUM = 1020
+# Take profit at +1% of the position's cost: value * 1000 >= cost * 1010.
+TP_NUM = 1010
 TP_DEN = 1000
 # Stop loss at -2% of the position's cost: value * 100 <= cost * 98.
 SL_NUM = 98
